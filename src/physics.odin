@@ -6,7 +6,7 @@ MAX_QUEUE_SIZE :: 256
 
 RigidBodyType :: enum {
 	Static,
-	Kinetic,
+	Kinematic,
 	Dynamic,
 }
 
@@ -137,7 +137,7 @@ RIGIDBODY_STATIC :: RigidBody {
 }
 
 RIGIDBODY_KINETIC :: RigidBody {
-	type      = .Kinetic,
+	type      = .Kinematic,
 	transform = UNIT_TRANSFORM,
 	mass      = 1,
 }

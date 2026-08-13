@@ -1,6 +1,7 @@
 package idunn
 
 import "base:runtime"
+import "core:fmt"
 import "core:math"
 import rl "vendor:raylib"
 
@@ -13,9 +14,9 @@ BOUNDING_BOX :: Vec3{10, 10, 10}
 MAX_ENTITIES :: 100000
 
 
-PIXEL_COUNT_X :: 240 * 1
-PIXEL_COUNT_Y :: 160 * 1
-PIXEL_SIZE :: 8
+PIXEL_COUNT_X :: 240 * 2
+PIXEL_COUNT_Y :: 160 * 2
+PIXEL_SIZE :: 4
 
 CameraTarget :: struct {
 	offset: Vec3,
@@ -212,7 +213,7 @@ camera_freemove :: proc(target: ^RasterizerTarget, dt: f32) {
 
 main :: proc() {
 
-	arena := initialize_arena(runtime.Gigabyte)
+	temp_arena := initialize_arena(runtime.Gigabyte)
 	origin, entity_store := entity_store_create()
 	rl.InitWindow(PIXEL_COUNT_X * PIXEL_SIZE, PIXEL_COUNT_Y * PIXEL_SIZE, "Software Rasterizer")
 	defer rl.CloseWindow()
@@ -305,22 +306,23 @@ main :: proc() {
 	player_rotation_speed: f32 = 10
 	mouse_sensitivity: f32 = 0.001
 	debug_info: DebugInfo
-	debug_overlay: b32 = true
+	debug_overlay: bool
 
 
 	for !rl.WindowShouldClose() {
-		defer arena_clear(&arena)
+		defer arena_clear(&temp_arena)
 		dt := rl.GetFrameTime()
 
-		debug_info.start_time = metrics_now(tick, arena)
+		debug_info.start_time = metrics_now(tick, temp_arena)
 
 		rasterizer_start_frame(render_target)
 
 
-		DEBUG_log_checkpoint(&debug_info, .FrameStart, arena, tick)
+		DEBUG_log_checkpoint(&debug_info, .FrameStart, temp_arena, tick)
 
-		if rl.GetKeyPressed() == rl.KeyboardKey.P do playing = !playing
-		if rl.GetKeyPressed() == rl.KeyboardKey.O do debug_overlay = !debug_overlay
+		if rl.IsKeyPressed(rl.KeyboardKey.P) do playing = !playing
+		if rl.IsKeyPressed(rl.KeyboardKey.O) do debug_overlay = !debug_overlay
+		fmt.println(debug_overlay)
 
 		player_rb, _ := entity_get_component(entity_store, player, RigidBody)
 		player_ct, _ := entity_get_component(entity_store, player, CameraTarget)
@@ -397,7 +399,7 @@ main :: proc() {
 			// Move + rotate player
 			// -----------------------------
 
-			DEBUG_log_checkpoint(&debug_info, .CameraUpdate, arena, tick)
+			DEBUG_log_checkpoint(&debug_info, .CameraUpdate, temp_arena, tick)
 
 			if vec_length(world_movement) > 0.0001 {
 				world_movement = vec_normalize(world_movement)
@@ -425,14 +427,14 @@ main :: proc() {
 
 		}
 
-		DEBUG_log_checkpoint(&debug_info, .MovementUpdate, arena, tick)
+		DEBUG_log_checkpoint(&debug_info, .MovementUpdate, temp_arena, tick)
 		entity_store_update(entity_store, dt)
 
-		DEBUG_log_checkpoint(&debug_info, .PhysicsUpdate, arena, tick)
+		DEBUG_log_checkpoint(&debug_info, .PhysicsUpdate, temp_arena, tick)
 
 		rasterizer_render_scene(
 			&render_target,
-			&arena,
+			&temp_arena,
 			entity_store.entities.model[:],
 			entity_store.entities.transform[:],
 			entity_store.entities.light[:],
@@ -440,11 +442,11 @@ main :: proc() {
 			wireframe = false,
 		)
 
-		DEBUG_log_checkpoint(&debug_info, .Render, arena, tick)
+		DEBUG_log_checkpoint(&debug_info, .Render, temp_arena, tick)
 
 		rasterizer_draw_frame(
 			render_target,
-			arena,
+			temp_arena,
 			&debug_info,
 			debug_overlay,
 			[?]DebugMetricType{.TSC, .NSec, .Monotonic, .ArenaAllocations, .BytesAllocated},

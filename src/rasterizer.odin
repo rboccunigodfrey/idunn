@@ -684,7 +684,7 @@ rasterizer_draw_frame :: proc(
 	target: RasterizerTarget,
 	arena: MemoryArena,
 	debug_info: ^DebugInfo = nil,
-	debug_overlay: b32 = false,
+	debug_overlay: bool = false,
 	enabled_metrics: [$N]DebugMetricType,
 	tick: i32,
 ) {

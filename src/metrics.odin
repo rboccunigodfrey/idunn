@@ -1,7 +1,6 @@
 package idunn
 
 import "base:runtime"
-import "core:strconv"
 import "core:strings"
 import "core:time"
 import rl "vendor:raylib"
@@ -234,7 +233,7 @@ DEBUG_display_overlay :: proc(info: ^DebugInfo, enabled_metrics: [$N]DebugMetric
 				sb := strings.builder_from_bytes(label_buf[:])
 				strings.write_string(&sb, checkpoint_display_info.label)
 				strings.write_string(&sb, " (")
-				strings.write_int(&sb, int(f32(checkpoint_value) * ratio * 100))
+				strings.write_int(&sb, int(f32(checkpoint_value) * ratio))
 				strings.write_string(&sb, "%)")
 
 				if pixel_height > 20 do rl.DrawText(strings.to_cstring(&sb), len(info.frames) + 40, accum - 15, 15, checkpoint_display_info.color)
