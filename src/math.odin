@@ -316,6 +316,19 @@ mat3x3_from_vec3s :: proc(v1: Vec3, v2: Vec3) -> Mat3x3 {
 	return {0, 0, 0, v1.x, v1.y, v1.z, v2.x, v2.y, v2.z}
 }
 
+mat3x3_from_quaternion :: proc(q: quaternion128) -> Mat3x3 {
+	rx := vec3_rotate_by_quaternion(VEC3_X, q)
+	ry := vec3_rotate_by_quaternion(VEC3_Y, q)
+	rz := vec3_rotate_by_quaternion(VEC3_Z, q)
+
+	// Rows are the rotated basis vectors, so R * v == rotate(v, q).
+	return Mat3x3 {
+		rx.x, ry.x, rz.x,
+		rx.y, ry.y, rz.y,
+		rx.z, ry.z, rz.z,
+	}
+}
+
 quaternion_from_vec3_and_scalar_angle :: proc(axis: Vec3, angle: f32) -> quaternion128 {
 	vnorm := vec_normalize(axis)
 	s := math.sin(angle / 2)

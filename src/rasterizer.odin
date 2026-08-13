@@ -511,19 +511,16 @@ rasterizer_render_scene :: proc(
 			)
 
 			combined_transform := transform_add(transforms[m_i], model.transform)
+			rotation_basis := mat3x3_from_quaternion(combined_transform.rotation)
 			for vertex in model.mesh.vertices {
-				target.vertex_buffer[tv_i] = point3d_local_to_point3d_world(
-					vertex,
-					combined_transform,
-				)
+				target.vertex_buffer[tv_i] =
+					rotation_basis * vertex * combined_transform.scale +
+					combined_transform.translation
 				tv_i += 1
 			}
 
 			for normal in model.mesh.normals {
-				target.normal_buffer[tn_i] = vec3_rotate_by_quaternion(
-					normal,
-					combined_transform.rotation,
-				)
+				target.normal_buffer[tn_i] = rotation_basis * normal
 				tn_i += 1
 			}
 
@@ -627,7 +624,6 @@ rasterizer_render_scene :: proc(
 					} else {
 						depth := 1 / vec_dot(1 / depths, weights) // NOTE: account for perspective foreshortening
 						if (depth <= target.depth_buffer[pixel_index]) {
-							bary_tri := barycentric({f32(x), f32(neg_y)}, tri2d)
 							corrected_weights := weights / depths * depth
 							normal := vec_normalize(
 								vec_sum(vec_splat_mul(normals, corrected_weights)),
